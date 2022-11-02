@@ -1,0 +1,50 @@
+---
+title: "Draft"
+output: html_document
+date: '2022-11-02'
+---
+
+```{r setup}
+library(quantmod)
+library(PerformanceAnalytics)
+library(PortfolioAnalytics)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+
+IMOEX <- quantmod::getSymbols("IMOEX.ME", from = "2013-01-01", to = "2022-09-01", auto.assign = FALSE)
+SP <- quantmod::getSymbols("^GSPC", from = "2013-01-01", to = "2022-09-01", auto.assign = FALSE)
+
+shares_data2 <- merge(IMOEX$IMOEX.ME.Close, SP$GSPC.Close)
+return_data3 <- na.omit(Return.calculate(shares_data2))
+colnames(return_data3) <- c("IMOEX", "S&P")
+return_data3 <- as.data.frame(return_data3)
+return_data3$time <- as.Date(rownames(as.data.frame(return_data3)))
+
+return_data4 <- as.data.frame(return_data3) %>% pivot_longer(cols = "IMOEX":"S&P", names_to = "Market_index", values_to = "Values")
+
+ggplot(data = return_data4, aes(x = time, y = Values, color = Market_index)) + geom_line() + scale_color_manual(values = c("darkblue", "lightblue")) + theme_bw()
+Return.annualized(na.omit(Return.calculate(IMOEX$IMOEX.ME.Close)))
+Return.annualized(na.omit(Return.calculate(SP$GSPC.Close)))
+sd.annualized(na.omit(Return.calculate(IMOEX$IMOEX.ME.Close)))
+sd.annualized(na.omit(Return.calculate(SP$GSPC.Close)))
+
+#Лукойл
+LKOH <- quantmod::getSymbols("LKOH.ME", from = "2000-01-01", to = "2022-09-01", auto.assign = FALSE)
+LKOH1 <- quantmod::getSymbols("LKOH.ME", from = "2020-01-01", to = "2022-09-01", auto.assign = FALSE)
+
+LKOH_return <- Return.calculate(LKOH$LKOH.ME.Close)
+LKOH_return1 <- Return.calculate(LKOH1$LKOH.ME.Close)
+
+LKOH_return <- as.data.frame(na.omit(LKOH_return))
+LKOH_return$date <- as.Date(rownames(LKOH_return))
+colnames(LKOH_return)[1] <- "Return"
+
+LKOH_return1 <- as.data.frame(na.omit(LKOH_return1))
+LKOH_return1$date <- as.Date(rownames(LKOH_return1))
+colnames(LKOH_return1)[1] <- "Return"
+
+ggplot(data = LKOH_return, aes(y = Return, x = date)) + geom_line(color = "darkblue", size = 1) + theme_bw() + ggtitle("Lukoil Stock Returns in 2000-2022 years") + ylab("Returns") + xlab("")
+ggplot(data = LKOH_return1, aes(y = Return, x = date)) + geom_line(color = "purple", size = 1) + theme_bw() + ggtitle("Lukoil Stock Returns in 2020-2022 years") + ylab("Returns") + xlab("")
+
+```
